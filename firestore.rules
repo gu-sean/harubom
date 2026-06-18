@@ -1,0 +1,41 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email.matches('rhksflwk@.*');
+    }
+
+    // 사용자 본인 데이터만 접근 (관리자는 전체 읽기 + 삭제 가능)
+    match /users/{userId} {
+      allow read: if request.auth != null
+                  && (request.auth.uid == userId || isAdmin());
+      allow write: if request.auth != null
+                   && request.auth.uid == userId;
+      allow delete: if isAdmin();
+    }
+
+    // 피드백: 로그인 사용자는 작성 가능, 본인 것만 읽기 / 관리자는 전체 읽기+수정
+    match /feedbacks/{feedbackId} {
+      // 작성: 로그인 + 본인 uid 일치
+      allow create: if request.auth != null
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.title is string
+                    && request.resource.data.title.size() <= 100
+                    && request.resource.data.body is string
+                    && request.resource.data.body.size() <= 1000;
+      // 읽기: 본인 것 또는 관리자
+      allow read: if request.auth != null
+                  && (resource.data.uid == request.auth.uid || isAdmin());
+      // 수정: 관리자만 (답변 달기, 상태 변경)
+      allow update: if isAdmin();
+      // 삭제: 불가
+      allow delete: if false;
+    }
+
+    // 그 외 모든 문서 거부
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

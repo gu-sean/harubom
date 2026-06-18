@@ -1,0 +1,50 @@
+{
+  "name": "harubom",
+  "version": "1.0.0",
+  "description": "하루봄 - 일정, 습관, 목표, 기분과 추억을 기록하는 하루 플래너",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "preview": "vite preview",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "test": "node scripts/verify-static.js",
+    "release:assetlinks": "node scripts/update-assetlinks.js",
+    "build": "vite build",
+    "android:init": "npm run android:prepare && npx cap add android",
+    "android:sync": "npm run android:prepare && npx cap sync android",
+    "android:open": "npx cap open android",
+    "android:run": "npx cap run android",
+    "android:build": "npx cap build android",
+    "release:check": "node scripts/release-check.js",
+    "stores:check": "node scripts/android-stores-check.js",
+    "android:prepare": "node scripts/prepare-capacitor.js",
+    "release:bundle": "scripts\\\\build-android-release.cmd",
+    "release:apk": "scripts\\\\build-android-apk.cmd",
+    "screenshots": "node scripts/capture-screenshots.js"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.2.1",
+    "@capacitor/core": "^6.2.1",
+    "@capacitor/haptics": "^6.0.3",
+    "@capacitor/keyboard": "^6.0.4",
+    "@capacitor/local-notifications": "^6.1.3",
+    "@capacitor/share": "^6.0.4",
+    "@capacitor/splash-screen": "^6.0.4",
+    "@capacitor/status-bar": "^6.0.3",
+    "firebase-admin": "^12.3.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.2.1",
+    "@vitejs/plugin-react": "^6.0.2",
+    "eslint": "^10.5.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-unused-imports": "^4.4.1",
+    "globals": "^17.6.0",
+    "playwright": "^1.61.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "serve": "^14.0.0",
+    "vite": "^8.0.16"
+  }
+}
