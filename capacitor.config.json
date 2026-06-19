@@ -1,6 +1,6 @@
 {
   "appId": "com.harubom.app",
-  "appName": "Harubom",
+  "appName": "하루봄",
   "webDir": "dist",
   "server": {
     "androidScheme": "https",
