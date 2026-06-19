@@ -6,7 +6,7 @@
  * 대부분 useApp()으로 전역 상태를, useT()로 번역을 받아 쓴다.
  */
 import React, { useState, useEffect } from 'react';
-import { LS } from '../../constants.js';
+import { LS, ADMIN_UID } from '../../constants.js';
 import { useT } from '../../i18n.jsx';
 import { todayStr, fmtD, toast } from '../../utils.js';
 import { useApp } from '../../store.js';
@@ -171,7 +171,7 @@ const Header = ({ onSearch, onAccount, onSettings, onToday, showToday, user, onG
 // BottomNav — 하단 탭 내비게이션. 관리자 계정이면 '유저' 탭을 추가로 노출.
 const BottomNav = ({ tab, onChange, user }) => {
   const t = useT();
-  const isAdmin = !!(user?.email?.startsWith('rhksflwk@')); // 특정 이메일 접두사를 관리자로 취급
+  const isAdmin = user?.uid === ADMIN_UID; // 관리자 UID 정확 일치 (Firestore 규칙과 동일 기준)
   const tabs = [
     {id:'calendar',    ico:'📅', lbl:t('nav.calendar')},
     {id:'dday',        ico:'🚩', lbl:'D-Day'},

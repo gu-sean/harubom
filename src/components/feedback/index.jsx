@@ -6,6 +6,7 @@
  * 두 탭 모두 window._FB(Firestore)와 window._currentUser에 의존한다.
  */
 import React, { useState, useEffect } from 'react';
+import { ADMIN_UID } from '../../constants.js';
 import { useLang, useT } from '../../i18n.jsx';
 import { toast } from '../../utils.js';
 import { useApp } from '../../store.js';
@@ -16,7 +17,7 @@ const FeedbackTab = () => {
   const t = useT();
   const lang = useLang();
   const user = window._currentUser;
-  const isAdmin = !!(user?.email?.startsWith('rhksflwk@')); // 관리자 판별(특정 이메일 접두사)
+  const isAdmin = user?.uid === ADMIN_UID; // 관리자 UID 정확 일치 (Firestore 규칙과 동일 기준)
   const [posts, setPosts]       = useState([]);
   const [title, setTitle]       = useState('');
   const [body, setBody]         = useState('');
