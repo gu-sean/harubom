@@ -10,6 +10,28 @@ import { createContext, useContext } from 'react';
 import { LS } from './constants.js';
 import { todayStr, fmtD, uid } from './utils.js';
 
+// pruneStaleKeys — 1년 이상 지난 recurDone / repeatExceptions 키를 제거한다.
+// 두 객체는 누적 삭제 로직이 없어 사용 기간이 길수록 무한히 커진다.
+// 앱 시작 시 1회만 실행해 localStorage 용량을 사전에 확보한다.
+//
+// 키 구조:
+//   recurDone        → "{eventId}_{YYYY-MM-DD}"     마지막 10자 = 인스턴스 날짜
+//   repeatExceptions → "{originDate}_{eventId}_{YYYY-MM-DD}"  마지막 10자 = 인스턴스 날짜
+const pruneStaleKeys = (recurDone, repeatExceptions) => {
+  const cutoff = new Date();
+  cutoff.setFullYear(cutoff.getFullYear() - 1);
+  const cutoffStr = fmtD(cutoff);
+
+  const prunedDone = Object.fromEntries(
+    Object.entries(recurDone).filter(([key]) => key.slice(-10) >= cutoffStr)
+  );
+  const prunedEx = Object.fromEntries(
+    Object.entries(repeatExceptions).filter(([key]) => key.slice(-10) >= cutoffStr)
+  );
+
+  return { recurDone: prunedDone, repeatExceptions: prunedEx };
+};
+
 // INIT_STATE — localStorage에서 저장본을 읽어 초기 상태를 구성. 파싱 실패 시 빈 기본 상태로 폴백.
 export const INIT_STATE = () => {
   try {
@@ -21,6 +43,13 @@ export const INIT_STATE = () => {
         const { dataUrl, ...meta } = photo;
         return meta;
       });
+
+      // 앱 시작 시 1회 오래된 반복 일정 보조 키 정리
+      const { recurDone, repeatExceptions } = pruneStaleKeys(
+        d.recurDone || {},
+        d.repeatExceptions || {}
+      );
+
       return {
         tab: 'calendar',
         yr: new Date().getFullYear(),
@@ -33,8 +62,8 @@ export const INIT_STATE = () => {
         habitLogs: d.habitLogs || {},
         moods: d.moods || {},
         gallery: cleanGallery,
-        recurDone: d.recurDone || {},
-        repeatExceptions: d.repeatExceptions || {},
+        recurDone,
+        repeatExceptions,
         goals: d.goals || [],
         photoCalendars: d.photoCalendars || [],
         reviews: d.reviews || {},
