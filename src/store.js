@@ -331,31 +331,39 @@ export const reducer = (state, action) => {
 export const getEventsForDate = (state, ds) => {
   // ① 해당 날짜에 직접 저장된 비반복 일정
   const direct = (state.events[ds]||[]).filter(ev => !ev.repeat || ev.repeat === 'none');
-  // ② 모든 원본 일정을 훑어 ds에 해당하는 반복 인스턴스를 생성
+
   const recurring = [];
-  Object.values(state.events).flat().forEach(ev => {
-    if (!ev.repeat || ev.repeat === 'none') return;
-    const key = `${ev.startDate}_${ev.id}_${ds}`;
-    if (state.repeatExceptions[key]) return; // '이 날짜만 삭제'된 예외는 건너뜀
-    const start = new Date(ev.startDate+'T00:00:00');
-    const target = new Date(ds+'T00:00:00');
-    if (ds <= ev.startDate) return;                       // 원본 시작일 당일/이전은 ①에서 처리
-    if (ev.repeatUntil && ds > ev.repeatUntil) return;    // 반복 종료일을 넘긴 날짜는 제외
-    // 주기별 도래 조건: 매일=항상, 매주=같은 요일, 매월=같은 일, 매년=같은 월/일
-    let match = false;
-    if (ev.repeat === 'daily') match = true;
-    else if (ev.repeat === 'weekly') match = target.getDay() === start.getDay();
-    else if (ev.repeat === 'monthly') match = target.getDate() === start.getDate();
-    else if (ev.repeat === 'yearly') match = target.getMonth() === start.getMonth() && target.getDate() === start.getDate();
-    // 완료 여부는 인스턴스별 recurDone에서 읽어와 done에 주입
-    if (match) recurring.push({...ev, isRecurring: true, originDate: ev.startDate, id: ev.id, done: !!(state.recurDone||{})[ev.id+'_'+ds]});
-  });
-  // ③ 여러 날에 걸친 일정의 '중간 날짜'분(시작일은 ①에서 이미 표시되므로 그 이후만)
   const multiDay = [];
+  // ds는 호출마다 고정값이므로 Date 객체를 루프 밖에서 1회만 생성
+  const target = new Date(ds+'T00:00:00');
+  const recurDone = state.recurDone || {};
+  const repeatExceptions = state.repeatExceptions || {};
+
+  // ②③ flat() 1회 + 단일 forEach로 반복 인스턴스와 멀티데이를 동시에 수집
+  // (기존: flat() 2회 × 별도 forEach, target Date를 매 이벤트마다 재생성)
   Object.values(state.events).flat().forEach(ev => {
-    if (!ev.endDate || ev.endDate <= ev.startDate) return;
-    if (ds > ev.startDate && ds <= ev.endDate) multiDay.push({...ev, isMultiDayContinued: true});
+    // ② 반복 일정: 문자열 비교(빠름) → 객체 조회 → Date 생성(느림) 순으로 조기 탈출
+    if (ev.repeat && ev.repeat !== 'none') {
+      if (
+        ds > ev.startDate &&
+        !repeatExceptions[`${ev.startDate}_${ev.id}_${ds}`] &&
+        (!ev.repeatUntil || ds <= ev.repeatUntil)
+      ) {
+        const start = new Date(ev.startDate+'T00:00:00');
+        let match = false;
+        if (ev.repeat === 'daily') match = true;
+        else if (ev.repeat === 'weekly')  match = target.getDay()   === start.getDay();
+        else if (ev.repeat === 'monthly') match = target.getDate()  === start.getDate();
+        else if (ev.repeat === 'yearly')  match = target.getMonth() === start.getMonth() && target.getDate() === start.getDate();
+        if (match) recurring.push({...ev, isRecurring: true, originDate: ev.startDate, id: ev.id, done: !!recurDone[ev.id+'_'+ds]});
+      }
+    }
+    // ③ 멀티데이: 시작일 이후 ~ 종료일 이내인 날짜에만 연속분 표시
+    if (ev.endDate && ev.endDate > ev.startDate && ds > ev.startDate && ds <= ev.endDate) {
+      multiDay.push({...ev, isMultiDayContinued: true});
+    }
   });
+
   return [...direct, ...recurring, ...multiDay].sort((a,b) => {
     if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
     const po = {high:0,normal:1,low:2};
