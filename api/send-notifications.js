@@ -17,24 +17,49 @@ function todayKST() {
   return kst.toISOString().slice(0, 10);
 }
 
-// 알림 본문 생성
+// 언어별 알림 메시지 템플릿
+const NOTIF_MESSAGES = {
+  ko: {
+    both:    (ev, done, total) => `오늘 일정 ${ev}개, 습관 ${done}/${total} 완료했어요 ✨`,
+    evOnly:  (ev)              => `오늘 일정 ${ev}개가 기다리고 있어요 📅`,
+    habOnly: (done, total)     => `오늘 습관 ${done}/${total} 달성했어요 💪`,
+    default:                      '오늘 하루도 하루봄과 함께해요 🌸',
+  },
+  en: {
+    both:    (ev, done, total) => `${ev} event${ev > 1 ? 's' : ''} & habits ${done}/${total} done today ✨`,
+    evOnly:  (ev)              => `${ev} event${ev > 1 ? 's' : ''} waiting for you today 📅`,
+    habOnly: (done, total)     => `Habits ${done}/${total} completed today 💪`,
+    default:                      'Have a wonderful day with Harubom 🌸',
+  },
+  zh: {
+    both:    (ev, done, total) => `今天有${ev}个日程，习惯完成${done}/${total} ✨`,
+    evOnly:  (ev)              => `今天有${ev}个日程在等你 📅`,
+    habOnly: (done, total)     => `今天习惯完成${done}/${total} 💪`,
+    default:                      '今天也和하루봄一起加油吧 🌸',
+  },
+  ja: {
+    both:    (ev, done, total) => `今日の予定${ev}件、習慣${done}/${total}完了 ✨`,
+    evOnly:  (ev)              => `今日の予定が${ev}件あります 📅`,
+    habOnly: (done, total)     => `今日の習慣${done}/${total}達成 💪`,
+    default:                      '今日も하루봄と一緒に過ごしましょう 🌸',
+  },
+};
+
+// 알림 본문 생성 — data.lang 필드로 언어 결정, 없으면 한국어 폴백
 function buildBody(data, today) {
+  const lang = NOTIF_MESSAGES[data.lang] ? data.lang : 'ko';
+  const m = NOTIF_MESSAGES[lang];
+
   const events = (data.events?.[today] || []).filter(e => !e.done);
   const habits = data.habits || [];
   const habitLogs = data.habitLogs?.[today] || {};
   const habDone = habits.filter(h => habitLogs[h.id]).length;
   const habTotal = habits.length;
 
-  if (events.length > 0 && habTotal > 0) {
-    return `오늘 일정 ${events.length}개, 습관 ${habDone}/${habTotal} 완료했어요 ✨`;
-  }
-  if (events.length > 0) {
-    return `오늘 일정 ${events.length}개가 기다리고 있어요 📅`;
-  }
-  if (habTotal > 0) {
-    return `오늘 습관 ${habDone}/${habTotal} 달성했어요 💪`;
-  }
-  return '오늘 하루도 하루봄과 함께해요 🌸';
+  if (events.length > 0 && habTotal > 0) return m.both(events.length, habDone, habTotal);
+  if (events.length > 0) return m.evOnly(events.length);
+  if (habTotal > 0) return m.habOnly(habDone, habTotal);
+  return m.default;
 }
 
 module.exports = async (req, res) => {

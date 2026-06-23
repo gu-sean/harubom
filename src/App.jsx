@@ -172,6 +172,7 @@ const AppUpgraded = () => {
         updatedAt: new Date().toISOString(),
         email: user.email || '',
         displayName: user.displayName || '',
+        lang: state.lang,
         events: state.events, ddays: state.ddays, habits: state.habits,
         habitLogs: state.habitLogs, moods: state.moods, goals: state.goals || [],
         gallery: state.gallery.map(p => ({ id: p.id, thumb: p.thumb, storageKey: p.storageKey, filter: p.filter, br: p.br, co: p.co, sa: p.sa, rot: p.rot, stk: p.stk, uploaded: p.uploaded, edited: p.edited })),
@@ -206,6 +207,7 @@ const AppUpgraded = () => {
   }, [
     state.events, state.ddays, state.habits, state.habitLogs,
     state.moods, state.goals, state.gallery, state.photoCalendars, state.reviews,
+    state.lang,
     user,
   ]);
 
