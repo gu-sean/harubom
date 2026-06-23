@@ -12,7 +12,10 @@ export const REPEAT = {none:'없음',daily:'매일',weekly:'매주',monthly:'매
 // 하루(밀리초). 날짜 차이 계산에서 반복 사용되므로 상수로 고정.
 export const MS_PER_DAY = 86400000;
 // localStorage 키 모음. 오타로 인한 키 불일치를 막기 위해 한곳에 모아둠.
-export const LS = { DATA:'nhr_data', THEME:'nhr_theme', DARK:'nhr_dark', LANG:'nhr_lang', TAGS:'nhr_recent_tags', ONBOARDED:'harubom_onboarded' };
+export const LS = { DATA:'nhr_data', THEME:'nhr_theme', DARK:'nhr_dark', LANG:'nhr_lang', TAGS:'nhr_recent_tags', ONBOARDED:'harubom_onboarded', SCHEMA_VER:'nhr_schema_ver' };
+
+// 현재 데이터 스키마 버전. 데이터 구조가 바뀔 때마다 올리고 store.js MIGRATIONS에 변환 함수를 추가한다.
+export const SCHEMA_VERSION = 1;
 
 // 관리자 계정 UID. 노출돼도 안전하며(실제 권한은 Firestore 보안 규칙이 강제),
 // 이메일 접두사 매칭과 달리 우회가 불가능하다. firestore.rules의 isAdmin()과 반드시 일치시킬 것.

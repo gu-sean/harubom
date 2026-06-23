@@ -7,8 +7,33 @@
  * AppCtx로 {state, dispatch}를 트리 전체에 공급한다.
  */
 import { createContext, useContext } from 'react';
-import { LS } from './constants.js';
+import { LS, SCHEMA_VERSION } from './constants.js';
 import { todayStr, fmtD, uid } from './utils.js';
+
+// ── 스키마 마이그레이션 ──────────────────────────────────────────────────────
+// 데이터 구조가 바뀔 때마다:
+//   1. constants.js의 SCHEMA_VERSION을 올린다.
+//   2. 아래 MIGRATIONS에 해당 버전 키로 변환 함수를 추가한다.
+//      함수는 이전 버전의 data를 받아 새 버전의 data를 반환해야 한다.
+//
+// 예시 (v1 → v2에서 habits에 color 필드 기본값 추가):
+//   2: (data) => ({
+//     ...data,
+//     habits: (data.habits || []).map(h => ({ color: '#3DBFA0', ...h })),
+//   }),
+const MIGRATIONS = {
+  // 현재 최신 버전이 1이므로 마이그레이션 항목 없음
+};
+
+// migrateData — fromVersion부터 SCHEMA_VERSION까지 순서대로 마이그레이션을 적용한다.
+const migrateData = (data, fromVersion) => {
+  let d = data;
+  for (let v = fromVersion + 1; v <= SCHEMA_VERSION; v++) {
+    if (MIGRATIONS[v]) d = MIGRATIONS[v](d);
+  }
+  return d;
+};
+// ────────────────────────────────────────────────────────────────────────────
 
 // pruneStaleKeys — 1년 이상 지난 recurDone / repeatExceptions 키를 제거한다.
 // 두 객체는 누적 삭제 로직이 없어 사용 기간이 길수록 무한히 커진다.
@@ -37,7 +62,15 @@ export const INIT_STATE = () => {
   try {
     const raw = localStorage.getItem(LS.DATA);
     if (raw) {
-      const d = JSON.parse(raw);
+      let d = JSON.parse(raw);
+
+      // 저장된 스키마 버전 확인 → 현재 버전보다 낮으면 마이그레이션 실행
+      const savedVersion = parseInt(localStorage.getItem(LS.SCHEMA_VER) || '0', 10);
+      if (savedVersion < SCHEMA_VERSION) {
+        d = migrateData(d, savedVersion);
+        localStorage.setItem(LS.SCHEMA_VER, String(SCHEMA_VERSION));
+      }
+
       // 사진 원본(dataUrl)은 IndexedDB/Storage에 있으므로 LS 복원 시엔 메타데이터만 남긴다(용량 절감)
       const cleanGallery = (d.gallery || []).map(photo => {
         const { dataUrl, ...meta } = photo;
