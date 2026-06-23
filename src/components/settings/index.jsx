@@ -15,16 +15,32 @@ const SettingsModal = ({ onClose }) => {
   const t = useT();
   const [notifEnabled, setNotifEnabled] = useState(false);
   const [notifLoading, setNotifLoading] = useState(false);
+  const [notifHour, setNotifHour] = useState(9); // 기본 09:00 KST
 
-  // 로그인 상태면 서버에 저장된 현재 알림 on/off 상태를 읽어와 동기화
+  // 로그인 상태면 서버에 저장된 알림 on/off + 시각을 읽어와 동기화
   useEffect(() => {
     const user = window._currentUser;
     if (!user || !window._FB?.enabled) return;
     const { fs, doc, getDoc } = window._FB;
     getDoc(doc(fs, 'users', user.uid)).then(snap => {
-      if (snap.exists()) setNotifEnabled(!!snap.data().notifEnabled);
+      if (snap.exists()) {
+        const data = snap.data();
+        setNotifEnabled(!!data.notifEnabled);
+        if (data.notifHour != null) setNotifHour(data.notifHour);
+      }
     }).catch(() => {});
   }, []);
+
+  // saveNotifHour — 알림 시각 변경 즉시 Firestore에 저장
+  const saveNotifHour = async (hour) => {
+    setNotifHour(hour);
+    const user = window._currentUser;
+    if (!user || !window._FB?.enabled) return;
+    const { fs, doc, setDoc } = window._FB;
+    await setDoc(doc(fs, 'users', user.uid), { notifHour: hour }, { merge: true }).catch(() => {});
+  };
+
+  const NOTIF_HOURS = [6, 7, 8, 9, 10, 11, 12, 18, 20, 22];
 
   // toggleNotif — 푸시 알림 켜기/끄기. 켤 때 권한 요청 → FCM 토큰 발급 → 서버 저장, 끌 때 토큰 제거.
   const toggleNotif = async () => {
@@ -131,6 +147,22 @@ const SettingsModal = ({ onClose }) => {
             },
           },
             notifLoading ? '⏳ 처리 중...' : notifEnabled ? '🔔 ' + t('settings.notif.off') : '🔕 ' + t('settings.notif.on'),
+          ),
+          notifEnabled && React.createElement(React.Fragment, null,
+            React.createElement('div', { style: { fontSize: 12, color: 'var(--mut)', margin: '14px 0 8px', fontWeight: 700 } }, '알림 시각 (KST)'),
+            React.createElement('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 8 } },
+              NOTIF_HOURS.map(h => React.createElement('button', {
+                key: h,
+                onClick: () => saveNotifHour(h),
+                style: {
+                  padding: '8px 14px', borderRadius: 99, border: 'none',
+                  cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 700,
+                  background: notifHour === h ? 'var(--pri)' : 'var(--sur2)',
+                  color: notifHour === h ? '#fff' : 'var(--txt)',
+                  transition: 'all .15s',
+                },
+              }, String(h).padStart(2, '0') + ':00'),
+            ),
           ),
         ),
         React.createElement('div', {style:{textAlign:'center',marginTop:24,fontSize:12,color:'var(--mut)'}},

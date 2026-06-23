@@ -11,10 +11,13 @@ if (!admin.apps.length) {
 const db = admin.firestore();
 const messaging = admin.messaging();
 
-// KST 기준 오늘 날짜 (YYYY-MM-DD)
+// KST 기준 오늘 날짜 (YYYY-MM-DD) 및 현재 시각(0~23)
 function todayKST() {
   const kst = new Date(Date.now() + 9 * 3600 * 1000);
   return kst.toISOString().slice(0, 10);
+}
+function currentKSTHour() {
+  return new Date(Date.now() + 9 * 3600 * 1000).getUTCHours();
 }
 
 // 언어별 알림 메시지 템플릿
@@ -72,6 +75,7 @@ module.exports = async (req, res) => {
   }
 
   const today = todayKST();
+  const hour  = currentKSTHour(); // 이 시각에 알림을 원하는 유저만 발송
   let sent = 0, failed = 0, skipped = 0;
 
   try {
@@ -92,7 +96,9 @@ module.exports = async (req, res) => {
 
       snap.docs.forEach(userDoc => {
         const data = userDoc.data();
-        if (!data.notifEnabled || !data.fcmToken) { skipped++; return; }
+        // notifHour 미설정 유저는 기본값 9시(KST)로 처리
+        const userHour = data.notifHour != null ? data.notifHour : 9;
+        if (!data.notifEnabled || !data.fcmToken || userHour !== hour) { skipped++; return; }
 
         messages.push({
           token: data.fcmToken,
