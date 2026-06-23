@@ -1,4 +1,5 @@
 import React from 'react';
+import { Sentry } from './sentry.js';
 
 // React 에러 경계는 반드시 클래스 컴포넌트로 작성해야 한다.
 // (함수 컴포넌트에서는 componentDidCatch / getDerivedStateFromError를 쓸 수 없음)
@@ -13,8 +14,10 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, info) {
-    // 나중에 Sentry 등 크래시 리포팅을 붙일 자리
     console.error('[하루봄 에러]', error, info.componentStack);
+    Sentry.captureException(error, {
+      contexts: { react: { componentStack: info.componentStack } },
+    });
   }
 
   render() {
