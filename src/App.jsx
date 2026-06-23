@@ -40,6 +40,8 @@ const AppUpgraded = () => {
   const tabContentRef = useRef(null);
   const backRef = useRef();
   backRef.current = { modal, showSearch, tab: state.tab };
+  const syncToCloudRef = useRef(null); // 항상 최신 syncToCloud를 가리키는 ref (클로저 stale 방지)
+  const autoSyncTimer = useRef(null);  // 디바운스 타이머 핸들
 
   // 테마/다크모드를 <html data-theme>에 반영(핑크는 기본값이라 빈 문자열). 최초 마운트 1회.
   useEffect(() => {
@@ -190,6 +192,22 @@ const AppUpgraded = () => {
       if (!silent) toast(T('toast.restored'), '📥');
     } catch (e) { if (!silent) toast('복원 실패: ' + e.message, '⚠️'); }
   };
+
+  // syncToCloudRef — 렌더마다 최신 syncToCloud로 갱신. 30초 타이머에서 stale 클로저 없이 최신 state를 백업하기 위함.
+  syncToCloudRef.current = syncToCloud;
+
+  // 자동 클라우드 백업 — 로그인 상태에서 데이터가 바뀌면 30초 디바운스 후 조용히 백업.
+  // 탭/날짜 같은 휘발성 UI 상태는 제외하고 실제 데이터 필드만 감시한다.
+  useEffect(() => {
+    if (!user || !window._FB?.enabled) return;
+    clearTimeout(autoSyncTimer.current);
+    autoSyncTimer.current = setTimeout(() => syncToCloudRef.current(true), 30_000);
+    return () => clearTimeout(autoSyncTimer.current);
+  }, [
+    state.events, state.ddays, state.habits, state.habitLogs,
+    state.moods, state.goals, state.gallery, state.photoCalendars, state.reviews,
+    user,
+  ]);
 
   const goToday = () => {
     const now = new Date();
