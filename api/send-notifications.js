@@ -62,6 +62,8 @@ function buildBody(data, today) {
   return m.default;
 }
 
+const PAGE_SIZE = 500; // Firestore 페이지 크기 = FCM sendEach 최대 배치 크기
+
 module.exports = async (req, res) => {
   // Vercel cron 시크릿 검증
   const authHeader = req.headers.authorization;
@@ -73,17 +75,28 @@ module.exports = async (req, res) => {
   let sent = 0, failed = 0, skipped = 0;
 
   try {
-    const usersSnap = await db.collection('users').get();
+    let lastDoc = null;
 
-    const tasks = usersSnap.docs.map(async (userDoc) => {
-      const data = userDoc.data();
-      if (!data.notifEnabled || !data.fcmToken) { skipped++; return; }
+    // 커서 기반 페이지네이션 — 한 번에 PAGE_SIZE명씩 처리해 메모리 급증과 타임아웃을 방지
+    while (true) {
+      let query = db.collection('users').orderBy('__name__').limit(PAGE_SIZE);
+      if (lastDoc) query = query.startAfter(lastDoc);
 
-      const body = buildBody(data, today);
-      try {
-        await messaging.send({
+      const snap = await query.get();
+      if (snap.empty) break;
+      lastDoc = snap.docs[snap.docs.length - 1];
+
+      // 알림 대상 필터링 및 개인화 메시지 빌드
+      const messages = [];
+      const tokenToDocId = new Map();
+
+      snap.docs.forEach(userDoc => {
+        const data = userDoc.data();
+        if (!data.notifEnabled || !data.fcmToken) { skipped++; return; }
+
+        messages.push({
           token: data.fcmToken,
-          notification: { title: '✿ 하루봄', body },
+          notification: { title: '✿ 하루봄', body: buildBody(data, today) },
           webpush: {
             notification: {
               icon: '/icons/icon-192.png',
@@ -93,23 +106,42 @@ module.exports = async (req, res) => {
             fcmOptions: { link: '/' },
           },
         });
-        sent++;
-      } catch (err) {
-        failed++;
-        // 만료된 토큰은 Firestore에서 제거
-        if (
-          err.code === 'messaging/registration-token-not-registered' ||
-          err.code === 'messaging/invalid-registration-token'
-        ) {
-          await db.collection('users').doc(userDoc.id).update({
-            fcmToken: null,
-            notifEnabled: false,
-          }).catch(() => {});
-        }
-      }
-    });
+        tokenToDocId.set(data.fcmToken, userDoc.id);
+      });
 
-    await Promise.all(tasks);
+      if (messages.length > 0) {
+        // sendEach — 최대 500개 메시지를 FCM에 한 번에 전송 (개별 send × N 대비 네트워크 왕복 절감)
+        const batchResult = await messaging.sendEach(messages);
+
+        // 만료 토큰 정리 (결과 배열을 순회해 실패 원인 확인)
+        const cleanupTasks = [];
+        batchResult.responses.forEach((resp, i) => {
+          if (resp.success) {
+            sent++;
+          } else {
+            failed++;
+            const code = resp.error?.code;
+            if (
+              code === 'messaging/registration-token-not-registered' ||
+              code === 'messaging/invalid-registration-token'
+            ) {
+              const docId = tokenToDocId.get(messages[i].token);
+              if (docId) {
+                cleanupTasks.push(
+                  db.collection('users').doc(docId)
+                    .update({ fcmToken: null, notifEnabled: false })
+                    .catch(() => {})
+                );
+              }
+            }
+          }
+        });
+        await Promise.all(cleanupTasks);
+      }
+
+      if (snap.docs.length < PAGE_SIZE) break; // 마지막 페이지
+    }
+
     res.json({ ok: true, today, sent, failed, skipped });
   } catch (e) {
     console.error('send-notifications error:', e);

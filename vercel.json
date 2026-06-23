@@ -8,5 +8,10 @@
       "path": "/api/send-notifications",
       "schedule": "0 0 * * *"
     }
-  ]
+  ],
+  "functions": {
+    "api/send-notifications.js": {
+      "maxDuration": 300
+    }
+  }
 }
