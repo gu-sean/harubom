@@ -345,6 +345,7 @@ export const reducer = (state, action) => {
         gallery:       Array.isArray(d.gallery)  ? d.gallery  : state.gallery,
         goals:         Array.isArray(d.goals)    ? d.goals    : state.goals,
         photoCalendars:Array.isArray(d.photoCalendars) ? d.photoCalendars : state.photoCalendars,
+        reviews:       (typeof d.reviews === 'object' && !Array.isArray(d.reviews)) ? d.reviews : state.reviews,
       };
       break;
     }

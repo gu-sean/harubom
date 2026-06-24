@@ -52,6 +52,7 @@ const AppUpgraded = () => {
 
   // Firebase 인증 구독. 로그인 상태가 잡히면 세션당 1회 클라우드에서 복원(syncFromCloud).
   useEffect(() => {
+    let authHandler = null;
     const initAuth = () => {
       if (!window._FB?.enabled) return;
       // 이미 로그인된 유저 즉시 반영
@@ -62,7 +63,7 @@ const AppUpgraded = () => {
           syncFromCloud();
         }
       }
-      window.addEventListener('auth-changed', e => {
+      authHandler = e => {
         setUser(e.detail.user);
         if (e.detail.user) {
           if (!sessionStorage.getItem('nhr_synced')) {
@@ -74,7 +75,8 @@ const AppUpgraded = () => {
           dispatch({ type: 'SET_TAB', tab: 'calendar' });
           sessionStorage.removeItem('nhr_synced');
         }
-      });
+      };
+      window.addEventListener('auth-changed', authHandler);
     };
     // Firebase가 이미 초기화됐으면 즉시 실행, 아니면 이벤트 대기
     if (window._FB?.enabled) {
@@ -82,6 +84,10 @@ const AppUpgraded = () => {
     } else {
       window.addEventListener('firebase-ready', initAuth, { once: true });
     }
+    return () => {
+      window.removeEventListener('firebase-ready', initAuth);
+      if (authHandler) window.removeEventListener('auth-changed', authHandler);
+    };
   }, []);
 
   // PWA 설치 프롬프트를 가로채 보류해 두고, 자체 배너에서 원하는 시점에 띄운다
@@ -174,7 +180,9 @@ const AppUpgraded = () => {
         displayName: user.displayName || '',
         lang: state.lang,
         events: state.events, ddays: state.ddays, habits: state.habits,
+        // notifHour는 settings에서 직접 Firestore에 저장되지만, 클라우드 복원 시 유지되도록 포함
         habitLogs: state.habitLogs, moods: state.moods, goals: state.goals || [],
+        reviews: state.reviews || {},
         gallery: state.gallery.map(p => ({ id: p.id, thumb: p.thumb, storageKey: p.storageKey, filter: p.filter, br: p.br, co: p.co, sa: p.sa, rot: p.rot, stk: p.stk, uploaded: p.uploaded, edited: p.edited })),
       }, { merge: true });
       if (!silent) toast('클라우드에 백업됐어요', '☁️');
@@ -189,7 +197,7 @@ const AppUpgraded = () => {
       const snap = await getDoc(doc(fs, 'users', user.uid));
       if (!snap.exists()) { await syncToCloud(true); return; }
       const d = snap.data();
-      dispatch({ type: 'CLOUD_RESTORE', data: { events: d.events || {}, ddays: d.ddays || [], habits: d.habits || [], habitLogs: d.habitLogs || {}, moods: d.moods || {}, gallery: d.gallery || [], goals: d.goals || [], photoCalendars: d.photoCalendars || [] } });
+      dispatch({ type: 'CLOUD_RESTORE', data: { events: d.events || {}, ddays: d.ddays || [], habits: d.habits || [], habitLogs: d.habitLogs || {}, moods: d.moods || {}, gallery: d.gallery || [], goals: d.goals || [], photoCalendars: d.photoCalendars || [], reviews: d.reviews || {} } });
       if (!silent) toast(T('toast.restored'), '📥');
     } catch (e) { if (!silent) toast('복원 실패: ' + e.message, '⚠️'); }
   };
