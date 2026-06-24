@@ -108,6 +108,9 @@ const AppUpgraded = () => {
           sw.onstatechange = () => { if (sw.state === 'installed' && navigator.serviceWorker.controller) sw.postMessage({ type: 'SKIP_WAITING' }); };
         };
         reg.update();
+        navigator.serviceWorker.ready.then(r => {
+          if (window.FIREBASE_CONFIG) r.active?.postMessage({ type: 'FIREBASE_CONFIG', config: window.FIREBASE_CONFIG });
+        });
       }).catch(() => {});
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       if (!sessionStorage.getItem('sw_reloaded')) { sessionStorage.setItem('sw_reloaded', '1'); window.location.reload(); }

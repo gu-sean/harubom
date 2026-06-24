@@ -26,14 +26,35 @@ function initFB(cfg) {
   } catch(_) {}
 }
 
-initFB({
-  apiKey: "AIzaSyBa3na9yaijIyOXEz3REmk4sNqXvxjDXus",
-  authDomain: "naharu-app.firebaseapp.com",
-  projectId: "naharu-app",
-  storageBucket: "naharu-app.firebasestorage.app",
-  messagingSenderId: "1020301644065",
-  appId: "1:1020301644065:web:5e4be458910cfc1c082e60",
-});
+/* Firebase config는 App.jsx가 SW 등록 후 FIREBASE_CONFIG 메시지로 전달.
+   SW 재시작 후 백그라운드 푸시에 대비해 IndexedDB에 캐시한다. */
+const _IDB = 'harubom-sw-cfg';
+function _idbPut(cfg) {
+  try {
+    const req = indexedDB.open(_IDB, 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore('cfg');
+    req.onsuccess = e => {
+      const db = e.target.result;
+      db.transaction('cfg', 'readwrite').objectStore('cfg').put(cfg, 'fb');
+      db.close();
+    };
+  } catch (_) {}
+}
+function _idbGet() {
+  return new Promise(resolve => {
+    try {
+      const req = indexedDB.open(_IDB, 1);
+      req.onupgradeneeded = e => e.target.result.createObjectStore('cfg');
+      req.onsuccess = e => {
+        const db = e.target.result;
+        const r = db.transaction('cfg').objectStore('cfg').get('fb');
+        r.onsuccess = () => { db.close(); resolve(r.result || null); };
+        r.onerror  = () => { db.close(); resolve(null); };
+      };
+      req.onerror = () => resolve(null);
+    } catch (_) { resolve(null); }
+  });
+}
 
 /* install */
 self.addEventListener('install', e => {
@@ -45,6 +66,7 @@ self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
       .then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))))
+      .then(() => _idbGet().then(cfg => { if (cfg) initFB(cfg); }))
       .then(() => self.clients.claim())
   );
 });
@@ -180,7 +202,7 @@ function scheduleNotif(ev) {
 /* 메시지 수신 */
 self.addEventListener('message', e => {
   const { type, ev, config } = e.data || {};
-  if (type === 'FIREBASE_CONFIG' && config) initFB(config);
+  if (type === 'FIREBASE_CONFIG' && config) { initFB(config); _idbPut(config); }
   if (type === 'SKIP_WAITING') self.skipWaiting();
   if (type === 'SCHEDULE_NOTIF' && ev) scheduleNotif(ev);
   if (type === 'CANCEL_NOTIF' && ev?.id) {
