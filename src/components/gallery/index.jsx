@@ -1039,7 +1039,7 @@ const GalleryTabUpgraded = () => {
 
   // handleDelete — 확인 후 IndexedDB 원본과 상태에서 함께 제거.
   const handleDelete = async (id) => {
-    if (confirm(t('photo.delete.confirm') || '사진을 삭제할까요?')) {
+    if (confirm(t('photo.delete.confirm'))) {
       await deletePhotoIDB(id);
       dispatch({ type: 'DELETE_PHOTO', id });
       toast(t('toast.deleted'), '🗑️');

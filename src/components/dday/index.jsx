@@ -168,11 +168,15 @@ const DDayModal = ({ dd, onClose, onSave }) => {
     {v:7, k:'dday.notify.7d'},
   ];
 
-  // 저장: 이름 필수 검증 후 상위 onSave 호출. 알림 켜져 있으면 즉시 알림 예약.
+  // 저장: 이름 필수 검증 후 상위 onSave 호출. 수정 시 기존 알림 취소 후 재예약.
   const handleSave = () => {
     if (!label.trim()) { toast(t('dday.name_req'),'⚠️'); return; }
     const saved = { id: dd?.id||uid(), label: label.trim(), date, emoji, color, yearly, notify, notifyDays };
     onSave(saved, isEditing ? 'edit' : 'add');
+    // 수정 시 날짜/알림이 바뀔 수 있으므로 기존 알림 취소 후 재예약
+    if (isEditing) {
+      navigator.serviceWorker?.ready.then(reg => reg.active?.postMessage({ type: 'CANCEL_NOTIF', ev: { id: saved.id } }));
+    }
     if (notify) scheduleDDayNotif(saved);
     vib(40);
   };

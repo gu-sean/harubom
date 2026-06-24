@@ -31,7 +31,7 @@
 |------|------|
 | **프론트엔드** | React 18, Vite 8, `@vitejs/plugin-react` |
 | **UI 방식** | `React.createElement` (JSX 빌드 타임 변환) |
-| **앱 패키징** | Capacitor 6 — Android 전용 |
+| **앱 패키징** | Capacitor 6 — Android 전용 (Gradle 8.10, Java 23 호환) |
 | **백엔드** | Firebase Auth · Firestore · Storage · FCM |
 | **서버리스** | Vercel Serverless Functions (`api/send-notifications.js`) |
 | **푸시 알림** | FCM + Vercel Cron (매일 KST 09:00 발송) |
@@ -55,8 +55,13 @@ naharu-app/
 ├── firestore.rules             # Firestore 보안 규칙
 ├── storage.rules               # Firebase Storage 보안 규칙
 │
+├── assets/                     # 아이콘 소스 파일 (scripts/ 에서 참조)
+│   ├── icon-foreground.png     #   어댑티브 아이콘 포그라운드 (투명 배경)
+│   ├── icon-background.png     #   어댑티브 아이콘 배경
+│   └── icon-only.png           #   단독 아이콘 (마스킹 없는 원본)
+│
 ├── public/                     # Vite가 dist/ 루트에 그대로 복사하는 정적 자산
-│   ├── sw.js                   #   서비스 워커 (오프라인 캐시 · FCM 백그라운드 알림)
+│   ├── sw.js                   #   서비스 워커 (오프라인 캐시 · FCM 백그라운드 알림 · Firebase config는 App.jsx가 postMessage로 주입)
 │   ├── manifest.json           #   PWA 매니페스트
 │   ├── privacy.html            #   개인정보처리방침
 │   ├── icons/                  #   앱 아이콘 (72 ~ 512px)
@@ -91,7 +96,6 @@ naharu-app/
 ├── api/
 │   └── send-notifications.js   # Vercel Serverless · Firestore 순회 → FCM 발송
 │
-└── android/                    # Capacitor Android 네이티브 프로젝트 (Gradle)
+│
+└── android/                    # Capacitor Android 네이티브 프로젝트 (Gradle 8.10)
 ```
-
-

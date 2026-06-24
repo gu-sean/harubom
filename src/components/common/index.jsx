@@ -9,7 +9,7 @@ import React, { useState, useEffect } from 'react';
 import { LS, ADMIN_UID } from '../../constants.js';
 import { useT } from '../../i18n.jsx';
 import { todayStr, fmtD, toast } from '../../utils.js';
-import { useApp } from '../../store.js';
+import { useApp, getEventsForDate } from '../../store.js';
 
 // 탭별 빈 상태에 쓰는 인라인 SVG 일러스트(문자열). EmptyState에서 dangerouslySetInnerHTML로 주입.
 const EmptyIllust = {
@@ -146,7 +146,6 @@ const Header = ({ onSearch, onAccount, onSettings, onToday, showToday, user, onG
   const toggleDark = () => {
     const newDark = !state.dark;
     document.documentElement.setAttribute('data-theme', newDark ? 'dark' : state.theme === 'pink' ? '' : state.theme);
-    localStorage.setItem(LS.DARK, newDark ? '1' : '0');
     dispatch({ type: 'SET_DARK', dark: newDark });
   };
   const avatar = user ? (user.displayName || user.email || '?')[0].toUpperCase() : '👤';
@@ -182,14 +181,14 @@ const BottomNav = ({ tab, onChange, user }) => {
     ...(isAdmin ? [{id:'admin-users', ico:'👥', lbl:t('nav.users')}] : []),
   ];
   return React.createElement('nav', {className: 'bottom-nav'},
-    tabs.map(t => React.createElement('button', {
-      key: t.id,
-      className: `nb${tab === t.id ? ' active' : ''}`,
-      onClick: () => onChange(t.id),
-      'data-t': t.id,
+    tabs.map(tb => React.createElement('button', {
+      key: tb.id,
+      className: `nb${tab === tb.id ? ' active' : ''}`,
+      onClick: () => onChange(tb.id),
+      'data-t': tb.id,
     },
-      React.createElement('span', {className: 'nb-ico'}, t.ico),
-      React.createElement('span', {className: 'nb-lbl'}, t.lbl),
+      React.createElement('span', {className: 'nb-ico'}, tb.ico),
+      React.createElement('span', {className: 'nb-lbl'}, tb.lbl),
     ))
   );
 };
@@ -214,12 +213,14 @@ const CollapsibleSection = ({ title, children }) => {
 
 
 // TodaySummaryCard — 오늘 일정 진행도(완료/전체)와 다음 일정을 보여주는 요약 카드.
-const TodaySummaryCard = ({ events, onOpenEvent }) => {
+const TodaySummaryCard = ({ onOpenEvent }) => {
+  const { state } = useApp();
   const t = useT();
   const today = todayStr();
-  const todayEvs = events[today] || [];
+  // getEventsForDate로 반복 일정 인스턴스도 포함한 오늘 일정 목록을 가져옴
+  const todayEvs = getEventsForDate(state, today);
   const total = todayEvs.length;
-  const done = todayEvs.filter(e => e.done).length;
+  const done = todayEvs.filter(e => e.done || (e.isRecurring && (state.recurDone||{})[e.id+'_'+today])).length;
   const remaining = todayEvs.filter(e => !e.done && !e.allDay);
   const next = remaining.sort((a, b) => (a.startTime || '').localeCompare(b.startTime || ''))[0]; // 가장 이른 미완료 일정
 

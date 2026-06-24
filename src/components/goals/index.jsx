@@ -5,7 +5,7 @@
  * GoalCelebrationModal: 달성 축하 화면(파티클 + 공유 카드 다운로드/공유).
  * GoalModal: 목표 생성/수정 폼(타입·기간·목표치 입력).
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Share } from '@capacitor/share';
 import { MS_PER_DAY, CATEGORIES } from '../../constants.js';
 import { useT, useDateI18n } from '../../i18n.jsx';
@@ -150,6 +150,7 @@ const GoalTab = ({ onOpen }) => {
 
   const [filter, setFilter] = useState('all');
   const [celebrationGoal, setCelebrationGoal] = useState(null);
+  const celebrationTimerRef = useRef(null);
 
   // 필터: 달성(current>=target) / 진행중 / 전체
   const filtered = filter === 'all' ? goals
@@ -172,19 +173,22 @@ const GoalTab = ({ onOpen }) => {
   );
 
   // 습관/이벤트 연동 목표는 사용자가 직접 입력하지 않으므로, 진행도가 목표에 도달하면 자동으로 축하 모달을 띄운다.
+  // celebrationTimerRef로 타이머를 추적해 중복 등록과 언마운트 후 발화를 방지한다.
   useEffect(() => {
-    goals.forEach(goal => {
-      if (goal.type === 'count') return; // count형은 + 버튼 누를 때 별도로 축하 처리
+    for (const goal of goals) {
+      if (goal.type === 'count') continue; // count형은 + 버튼 누를 때 별도로 축하 처리
       const { current, target } = getGoalProgress(goal, state);
-      if (current >= target && !goal._celebrated) {
-        // 세션당 한 번만 축하(새로고침 전까지 중복 방지)
+      if (current >= target) {
         const key = 'celebrated_' + goal.id;
         if (!sessionStorage.getItem(key)) {
           sessionStorage.setItem(key, '1');
-          setTimeout(() => setCelebrationGoal(goal), 300);
+          clearTimeout(celebrationTimerRef.current);
+          celebrationTimerRef.current = setTimeout(() => setCelebrationGoal(goal), 300);
+          break; // 한 번에 하나만 축하
         }
       }
-    });
+    }
+    return () => clearTimeout(celebrationTimerRef.current);
   }, [goals, state.habitLogs, state.events]);
 
   return React.createElement('div', { className: 'pane active', id: 'pane-goal' },

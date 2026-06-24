@@ -371,7 +371,7 @@ const WeeklyReport = ({ state }) => {
 
 // StatsTab — 통계 탭 컨테이너. 선택한 월의 달성률·카테고리 분포·기분 통계와 주간 리포트를 보여준다.
 const StatsTab = () => {
-  const { state } = useApp();
+  const { state, dispatch } = useApp();
   const t = useT();
   const { fmtYrMo, getWd, fmtDate } = useDateI18n();
   const [statsYr, setStatsYr] = useState(new Date().getFullYear());
@@ -424,9 +424,7 @@ const StatsTab = () => {
         title: t('stats.empty.title'),
         desc: t('stats.empty.desc'),
         cta: t('stats.empty.cta'),
-        onCta: () => {
-          document.querySelector('.nb[data-t="calendar"]')?.click();
-        },
+        onCta: () => dispatch({ type: 'SET_TAB', tab: 'calendar' }),
       })
     );
   }

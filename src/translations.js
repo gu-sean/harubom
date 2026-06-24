@@ -10,7 +10,7 @@ export const TRANSLATIONS = {
   ko: {
     'nav.calendar':'캘린더','nav.dday':'D-Day','nav.goal':'목표','nav.habit':'습관','nav.stats':'통계','nav.feedback':'문의','nav.users':'유저',
     'btn.add':'＋ 추가','btn.save':'저장하기','btn.edit':'수정하기','btn.delete':'삭제하기','btn.cancel':'취소','btn.modify':'수정',
-    'settings.title':'⚙️ 설정','settings.theme':'테마','settings.lang':'언어','settings.notif':'🔔 알림','settings.notif.desc':'매일 오전 9시에 오늘 일정과 습관을 알려드려요','settings.notif.on':'알림 켜기','settings.notif.off':'알림 끄기','settings.notif.need_login':'로그인 후 사용 가능해요','settings.notif.blocked':'브라우저에서 알림이 차단됐어요. 브라우저 설정에서 허용해 주세요','settings.notif.error':'알림 설정 중 오류가 발생했어요',
+    'settings.title':'⚙️ 설정','settings.theme':'테마','settings.lang':'언어','settings.notif':'🔔 알림','settings.notif.desc':'매일 오전 9시에 오늘 일정과 습관을 알려드려요','settings.notif.on':'알림 켜기','settings.notif.off':'알림 끄기','settings.notif.need_login':'로그인 후 사용 가능해요','settings.notif.blocked':'브라우저에서 알림이 차단됐어요. 브라우저 설정에서 허용해 주세요','settings.notif.error':'알림 설정 중 오류가 발생했어요','settings.notif.hour':'알림 시각 (KST)',
     'theme.pink':'핑크','theme.mint':'민트','theme.lavender':'라벤더','theme.blue':'딥블루',
     'account.title':'👤 계정','account.backup':'☁️ 백업','account.restore':'📥 복원','account.logout':'로그아웃','account.login':'로그인','account.signup':'회원가입','account.syncing':'동기화 중...',
     'event.new':'✨ 새 일정','event.edit':'✏️ 일정 수정','event.name':'일정 이름','event.name.ph':'일정 이름을 입력해주세요',
@@ -84,7 +84,7 @@ export const TRANSLATIONS = {
   en: {
     'nav.calendar':'Calendar','nav.dday':'D-Day','nav.goal':'Goals','nav.habit':'Habits','nav.stats':'Stats','nav.feedback':'Support','nav.users':'Users',
     'btn.add':'＋ Add','btn.save':'Save','btn.edit':'Update','btn.delete':'Delete','btn.cancel':'Cancel','btn.modify':'Edit',
-    'settings.title':'⚙️ Settings','settings.theme':'Theme','settings.lang':'Language','settings.notif':'🔔 Notifications','settings.notif.desc':'Get daily reminders at 9am for your schedule and habits','settings.notif.on':'Enable Notifications','settings.notif.off':'Disable Notifications','settings.notif.need_login':'Please sign in first','settings.notif.blocked':'Notifications are blocked. Please allow them in browser settings','settings.notif.error':'Error setting up notifications',
+    'settings.title':'⚙️ Settings','settings.theme':'Theme','settings.lang':'Language','settings.notif':'🔔 Notifications','settings.notif.desc':'Get daily reminders at 9am for your schedule and habits','settings.notif.on':'Enable Notifications','settings.notif.off':'Disable Notifications','settings.notif.need_login':'Please sign in first','settings.notif.blocked':'Notifications are blocked. Please allow them in browser settings','settings.notif.error':'Error setting up notifications','settings.notif.hour':'Notification Time (KST)',
     'theme.pink':'Pink','theme.mint':'Mint','theme.lavender':'Lavender','theme.blue':'Deep Blue',
     'account.title':'👤 Account','account.backup':'☁️ Backup','account.restore':'📥 Restore','account.logout':'Sign Out','account.login':'Sign In','account.signup':'Sign Up','account.syncing':'Syncing...',
     'event.new':'✨ New Event','event.edit':'✏️ Edit Event','event.name':'Event Name','event.name.ph':'Enter event name',
@@ -158,7 +158,7 @@ export const TRANSLATIONS = {
   zh: {
     'nav.calendar':'日历','nav.dday':'D-Day','nav.goal':'目标','nav.habit':'习惯','nav.stats':'统计','nav.feedback':'帮助','nav.users':'用户',
     'btn.add':'＋ 添加','btn.save':'保存','btn.edit':'修改','btn.delete':'删除','btn.cancel':'取消','btn.modify':'编辑',
-    'settings.title':'⚙️ 设置','settings.theme':'主题','settings.lang':'语言','settings.notif':'🔔 通知','settings.notif.desc':'每天上午9点提醒您的日程和习惯','settings.notif.on':'开启通知','settings.notif.off':'关闭通知','settings.notif.need_login':'请先登录','settings.notif.blocked':'通知已被浏览器屏蔽，请在设置中允许','settings.notif.error':'设置通知时出错',
+    'settings.title':'⚙️ 设置','settings.theme':'主题','settings.lang':'语言','settings.notif':'🔔 通知','settings.notif.desc':'每天上午9点提醒您的日程和习惯','settings.notif.on':'开启通知','settings.notif.off':'关闭通知','settings.notif.need_login':'请先登录','settings.notif.blocked':'通知已被浏览器屏蔽，请在设置中允许','settings.notif.error':'设置通知时出错','settings.notif.hour':'通知时间 (KST)',
     'theme.pink':'粉色','theme.mint':'薄荷','theme.lavender':'薰衣草','theme.blue':'深蓝',
     'account.title':'👤 账户','account.backup':'☁️ 备份','account.restore':'📥 恢复','account.logout':'退出登录','account.login':'登录','account.signup':'注册','account.syncing':'同步中...',
     'event.new':'✨ 新日程','event.edit':'✏️ 编辑日程','event.name':'日程名称','event.name.ph':'请输入日程名称',
@@ -232,7 +232,7 @@ export const TRANSLATIONS = {
   ja: {
     'nav.calendar':'カレンダー','nav.dday':'Dデイ','nav.goal':'目標','nav.habit':'習慣','nav.stats':'統計','nav.feedback':'サポート','nav.users':'ユーザー',
     'btn.add':'＋ 追加','btn.save':'保存','btn.edit':'更新','btn.delete':'削除','btn.cancel':'キャンセル','btn.modify':'編集',
-    'settings.title':'⚙️ 設定','settings.theme':'テーマ','settings.lang':'言語','settings.notif':'🔔 通知','settings.notif.desc':'毎朝9時に今日の予定と習慣をお知らせします','settings.notif.on':'通知をオンにする','settings.notif.off':'通知をオフにする','settings.notif.need_login':'ログインしてください','settings.notif.blocked':'通知がブロックされています。ブラウザの設定から許可してください','settings.notif.error':'通知設定中にエラーが発生しました',
+    'settings.title':'⚙️ 設定','settings.theme':'テーマ','settings.lang':'言語','settings.notif':'🔔 通知','settings.notif.desc':'毎朝9時に今日の予定と習慣をお知らせします','settings.notif.on':'通知をオンにする','settings.notif.off':'通知をオフにする','settings.notif.need_login':'ログインしてください','settings.notif.blocked':'通知がブロックされています。ブラウザの設定から許可してください','settings.notif.error':'通知設定中にエラーが発生しました','settings.notif.hour':'通知時間 (KST)',
     'theme.pink':'ピンク','theme.mint':'ミント','theme.lavender':'ラベンダー','theme.blue':'ディープブルー',
     'account.title':'👤 アカウント','account.backup':'☁️ バックアップ','account.restore':'📥 復元','account.logout':'ログアウト','account.login':'ログイン','account.signup':'会員登録','account.syncing':'同期中...',
     'event.new':'✨ 新しい予定','event.edit':'✏️ 予定を編集','event.name':'予定名','event.name.ph':'予定名を入力してください',

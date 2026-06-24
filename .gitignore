@@ -1,5 +1,7 @@
 node_modules/
 
+# Claude Code session data
+.claude/
 
 # Local release signing material
 *.keystore
@@ -22,6 +24,9 @@ build/
 
 # Generated outputs (CI / dev tools)
 ui-audit/
+
+# Store listing assets (large binaries — managed outside git)
+store-assets/
 
 # Logs and local caches
 *.log

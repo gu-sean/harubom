@@ -6,7 +6,6 @@
  * store의 getEventsForDate에 의존해 'event' 타입 목표의 진행도를 집계한다.
  */
 import { todayStr, fmtD } from './utils.js';
-import { getEventsForDate } from './store.js';
 
 // drawGoalShareCard — 목표 달성 시 SNS 공유용 카드 이미지를 canvas에 그려 반환.
 // goal(목표), cat(카테고리 메타), t(번역 함수)를 받아 560x700 캔버스를 그린다.
@@ -166,17 +165,47 @@ const getGoalProgress = (goal, state) => {
   if (goal.type === 'event') {
     const { start, end } = goal.customEnd ? { start: goal.startDate, end: goal.customEnd } : getGoalPeriodDates(goal.period);
     const cat = goal.eventCategory;
-    let cnt = 0;
     const today = todayStr();
-    let d = new Date(start+'T00:00:00');
-    const endD = new Date(end+'T00:00:00');
-    while (d <= endD && fmtD(d) <= today) {
-      const ds = fmtD(d);
-      // 반복 일정까지 전개한 그날의 일정 중, 완료됐고 (지정 시) 카테고리가 맞는 것만 집계
-      const evs = getEventsForDate(state, ds);
-      cnt += evs.filter(ev => ev.done && (!cat || ev.category === cat)).length;
-      d.setDate(d.getDate()+1);
-    }
+    const effectiveEnd = end < today ? end : today;
+    const recurDone = state.recurDone || {};
+    const repeatExceptions = state.repeatExceptions || {};
+    let cnt = 0;
+
+    // O(E) 단일 패스: 전체 이벤트를 한 번만 순회해 기간 내 완료된 일정을 집계.
+    // 기존 방식(날짜별 getEventsForDate)은 O(days × events)였으나, 직접 이벤트와
+    // 반복 인스턴스를 분리해 각각 한 번씩만 처리하면 O(events + recurring × days_in_range).
+    Object.values(state.events).flat().forEach(ev => {
+      if (cat && ev.category !== cat) return;
+
+      if (!ev.repeat || ev.repeat === 'none') {
+        // 비반복 일정: 시작일이 범위 안에 있고 완료된 것만
+        if (ev.startDate >= start && ev.startDate <= effectiveEnd && ev.done) cnt++;
+        return;
+      }
+
+      // 반복 일정: 범위 내 인스턴스 중 recurDone에 완료 표시된 것 카운트
+      if (ev.startDate > effectiveEnd) return;
+      if (ev.repeatUntil && ev.repeatUntil < start) return;
+      const evStart = new Date(ev.startDate+'T00:00:00');
+      let d = new Date(start+'T00:00:00');
+      // 반복 인스턴스는 원본 날짜 이후부터 시작
+      if (d <= evStart) { d = new Date(evStart); d.setDate(d.getDate() + 1); }
+      const endD = new Date(effectiveEnd+'T00:00:00');
+      while (d <= endD) {
+        const ds = fmtD(d);
+        if (ev.repeatUntil && ds > ev.repeatUntil) break;
+        if (!repeatExceptions[`${ev.startDate}_${ev.id}_${ds}`]) {
+          let match = false;
+          if (ev.repeat === 'daily') match = true;
+          else if (ev.repeat === 'weekly')  match = d.getDay()   === evStart.getDay();
+          else if (ev.repeat === 'monthly') match = d.getDate()  === evStart.getDate();
+          else if (ev.repeat === 'yearly')  match = d.getMonth() === evStart.getMonth() && d.getDate() === evStart.getDate();
+          if (match && recurDone[ev.id+'_'+ds]) cnt++;
+        }
+        d.setDate(d.getDate() + 1);
+      }
+    });
+
     return { current: cnt, target: goal.target };
   }
   return { current: goal.current || 0, target: goal.target };

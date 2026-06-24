@@ -161,14 +161,16 @@ self.addEventListener('push', e => {
   } catch(_) {}
 });
 
-const VAPID_KEY = "BJaGUVcGbkpfvqCr15MJKbjGqLWSZgBXNiJTHSyK2FEh7Fy9Nt8SyYZxr5QUH3_Wh5iB7l2XHnwDW1l1Bt-PgBg";
+/* VAPID key는 App.jsx가 FIREBASE_CONFIG 메시지와 함께 vapidKey로 전달. IndexedDB에 캐시. */
+let _vapidKey = null;
 
 /* pushsubscriptionchange */
 self.addEventListener('pushsubscriptionchange', e => {
+  if (!_vapidKey) return; // VAPID key 미수신 시 재구독 생략
   e.waitUntil(
     self.registration.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: VAPID_KEY,
+      applicationServerKey: _vapidKey,
     }).catch(() => {})
   );
 });
@@ -190,7 +192,7 @@ function scheduleNotif(ev) {
       body: '"' + ev.title + '" ' + notifyLabel + ' 시작해요',
       icon: './icons/icon-192.png', badge: './icons/icon-96.png',
       tag: 'ev-' + ev.id, vibrate: [200, 100, 200],
-      data: { url: './index.html', evId: ev.id },
+      data: { url: './index.html', evId: ev.id, ds: ev.date, originDate: ev.originDate },
       actions: [{ action: 'open', title: '일정 보기' }, { action: 'done', title: '완료' }],
       requireInteraction: true,
     });
@@ -202,7 +204,7 @@ function scheduleNotif(ev) {
 /* 메시지 수신 */
 self.addEventListener('message', e => {
   const { type, ev, config } = e.data || {};
-  if (type === 'FIREBASE_CONFIG' && config) { initFB(config); _idbPut(config); }
+  if (type === 'FIREBASE_CONFIG' && config) { initFB(config); _idbPut(config); if (e.data.vapidKey) _vapidKey = e.data.vapidKey; }
   if (type === 'SKIP_WAITING') self.skipWaiting();
   if (type === 'SCHEDULE_NOTIF' && ev) scheduleNotif(ev);
   if (type === 'CANCEL_NOTIF' && ev?.id) {
@@ -215,10 +217,10 @@ self.addEventListener('message', e => {
 /* 알림 클릭 */
 self.addEventListener('notificationclick', e => {
   e.notification.close();
-  const { url = './index.html', evId } = e.notification.data || {};
+  const { url = './index.html', evId, ds, originDate } = e.notification.data || {};
   if (e.action === 'done' && evId) {
     self.clients.matchAll({ type: 'window' }).then(clients =>
-      clients.forEach(c => c.postMessage({ type: 'MARK_DONE', evId }))
+      clients.forEach(c => c.postMessage({ type: 'MARK_DONE', evId, ds, originDate }))
     );
   }
   e.waitUntil(

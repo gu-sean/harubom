@@ -84,7 +84,7 @@ const CopyDateModal = ({ ev, onClose, onCopy }) => {
           style: { background: 'var(--pri-light)', borderRadius: 12, padding: '12px 14px', marginBottom: 18, borderLeft: '3px solid var(--pri)' }
         },
           React.createElement('div', { style: { fontSize: 12, color: 'var(--mut)', marginBottom: 4 } }, t('event.copy_src')),
-          React.createElement('div', { style: { fontSize: 14, fontWeight: 800, color: 'var(--txt)' } }, ev.emoji || '' + ev.title),
+          React.createElement('div', { style: { fontSize: 14, fontWeight: 800, color: 'var(--txt)' } }, (ev.emoji || '') + ev.title),
           ev.startDate && React.createElement('div', { style: { fontSize: 12, color: 'var(--mut)', marginTop: 2 } },
             fmtDate(ev.startDate) + (ev.startTime ? ' · ' + ev.startTime : '')
           ),
@@ -653,7 +653,7 @@ const CalendarTabUpgraded = ({ onOpenEvent, onOpenMood }) => {
 
   return React.createElement('div', { className: 'pane active', id: 'pane-calendar' },
     // 오늘 요약 카드
-    React.createElement(TodaySummaryCard, { events, onOpenEvent }),
+    React.createElement(TodaySummaryCard, { onOpenEvent }),
 
     // 캘린더 카드 (스와이프 가능)
     React.createElement('div', {

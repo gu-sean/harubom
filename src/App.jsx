@@ -109,11 +109,17 @@ const AppUpgraded = () => {
         };
         reg.update();
         navigator.serviceWorker.ready.then(r => {
-          if (window.FIREBASE_CONFIG) r.active?.postMessage({ type: 'FIREBASE_CONFIG', config: window.FIREBASE_CONFIG });
+          if (window.FIREBASE_CONFIG) r.active?.postMessage({ type: 'FIREBASE_CONFIG', config: window.FIREBASE_CONFIG, vapidKey: window.VAPID_KEY });
         });
       }).catch(() => {});
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       if (!sessionStorage.getItem('sw_reloaded')) { sessionStorage.setItem('sw_reloaded', '1'); window.location.reload(); }
+    });
+    // SW에서 보내는 MARK_DONE 메시지 수신 — 알림 '완료' 버튼 클릭 시 일정 완료 처리
+    navigator.serviceWorker.addEventListener('message', e => {
+      if (e.data?.type === 'MARK_DONE' && e.data?.evId) {
+        dispatch({ type: 'TOGGLE_DONE', id: e.data.evId, ds: e.data.ds || null, originDate: e.data.originDate || null });
+      }
     });
   }, []);
 

@@ -220,9 +220,9 @@ export const reducer = (state, action) => {
       break;
     }
     case 'COPY_EVENT': {
-      // 다른 날짜로 복사: 새 id를 부여하고 완료 상태는 초기화
+      // 다른 날짜로 복사: 새 id, 완료 초기화, 반복 설정 제거(단발 복사)
       const { ev, toDs } = action;
-      const newEv = { ...ev, id: uid(), startDate: toDs, endDate: toDs, done: false };
+      const newEv = { ...ev, id: uid(), startDate: toDs, endDate: toDs, done: false, repeat: 'none', repeatUntil: undefined };
       const events = { ...state.events };
       events[toDs] = [...(events[toDs] || []), newEv];
       const d = new Date(toDs + 'T00:00:00');
@@ -236,7 +236,12 @@ export const reducer = (state, action) => {
       const ev = (events[fromDs] || []).find(e => e.id === evId);
       if (!ev) { next = state; break; }
       events[fromDs] = (events[fromDs] || []).filter(e => e.id !== evId);
-      const movedEv = { ...ev, startDate: toDs, endDate: toDs };
+      // 멀티데이 일정은 원래 기간을 유지하며 시작일만 이동
+      const duration = ev.endDate && ev.endDate > ev.startDate
+        ? new Date(ev.endDate+'T00:00:00') - new Date(ev.startDate+'T00:00:00')
+        : 0;
+      const newEnd = duration > 0 ? fmtD(new Date(new Date(toDs+'T00:00:00').getTime() + duration)) : toDs;
+      const movedEv = { ...ev, startDate: toDs, endDate: newEnd };
       events[toDs] = [...(events[toDs] || []), movedEv];
       const d = new Date(toDs + 'T00:00:00');
       next = { ...state, events, sel: toDs, yr: d.getFullYear(), mo: d.getMonth() };
@@ -292,8 +297,8 @@ export const reducer = (state, action) => {
     case 'UPDATE_PHOTO': next = {...state, gallery: state.gallery.map(p => p.id === action.photo.id ? action.photo : p)}; break;
     case 'DELETE_PHOTO': next = {...state, gallery: state.gallery.filter(p => p.id !== action.id)}; break;
     case 'REORDER_GALLERY': next = {...state, gallery: action.gallery}; break;
-    case 'SET_THEME': next = {...state, theme: action.theme}; break;
-    case 'SET_DARK': next = {...state, dark: action.dark}; break;
+    case 'SET_THEME': next = {...state, theme: action.theme}; localStorage.setItem(LS.THEME, action.theme); break;
+    case 'SET_DARK': next = {...state, dark: action.dark}; localStorage.setItem(LS.DARK, action.dark ? '1' : ''); break;
     case 'SET_LANG': next = {...state, lang: action.lang}; localStorage.setItem(LS.LANG, action.lang); break;
     case 'SET_EV_FILTER': next = {...state, evCatFilter: action.cat, evColorFilter: action.color}; break;
     case 'ADD_RECENT_TAG': {
