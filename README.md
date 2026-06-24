@@ -96,6 +96,19 @@ naharu-app/
 ├── api/
 │   └── send-notifications.js   # Vercel Serverless · Firestore 순회 → FCM 발송
 │
+├── scripts/                    # 빌드·배포·유틸리티 스크립트
+│   ├── build.sh                #   전체 빌드 (Unix)
+│   ├── build-android-release.cmd #  서명된 AAB 빌드 (Windows)
+│   ├── build-android-apk.cmd   #   디버그 APK 빌드 (Windows)
+│   ├── gen-android-icons.js    #   Android 어댑티브 아이콘 전 밀도 생성
+│   ├── make-adaptive-icon-assets.js # 어댑티브 아이콘 소스 생성
+│   ├── prepare-capacitor.js    #   Capacitor 동기화 전처리
+│   ├── capture-screenshots.js  #   Playwright 스토어 스크린샷 자동 촬영
+│   ├── release-check.js        #   릴리스 전 체크리스트 검증
+│   ├── verify-static.js        #   빌드 결과물 정적 검증 (Vercel build 단계)
+│   ├── update-assetlinks.js    #   assetlinks.json 자동 업데이트
+│   ├── android-stores-check.js #   스토어 등록 정보 검증
+│   └── _preview_masks.js       #   아이콘 미리보기 마스크 생성
 │
 └── android/                    # Capacitor Android 네이티브 프로젝트 (Gradle 8.10)
 ```
