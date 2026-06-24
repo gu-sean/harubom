@@ -85,6 +85,8 @@ export const CATEGORIES = [
 ];
 // 사용자 지정 색상 팔레트 (커스텀 카테고리/일정 색상 선택용)
 export const COLORS = ['#FF6B6B','#FF9A7B','#FFB347','#52B69A','#7EC8E3','#9B7FD4','#FF6CAE','#4A90D9','#95D44A','#F7C59F'];
+// 기분 기록에 사용하는 이모지 목록. 캘린더와 모달 모두 이 상수를 참조한다.
+export const MOOD_EMOJIS = ['😊','😄','🥰','😌','🤗','😐','😔','😢','😡','🤩','🥱','🤒','😤','😍','😇'];
 // 앱 테마 프리셋. id를 LS.THEME에 저장하고 CSS 변수로 강조색을 바꾼다.
 export const THEMES = [
   {id:'pink',label:'핑크',color:'#F5604A'},

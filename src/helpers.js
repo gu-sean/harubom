@@ -214,4 +214,9 @@ const sortEvs = (evs, sortOrder) => {
   }
 };
 
-export { drawGoalShareCard, GOAL_CATEGORIES, GOAL_PERIODS, getGoalPeriodDates, getGoalProgress, SORT_OPTS, sortEvs };
+// getGoalCat — 카테고리 id로 GOAL_CATEGORIES 항목을 찾는다. 없으면 'other'로 fallback.
+// GOAL_CATEGORIES[7] 인덱스 하드코딩 대신 이 함수를 사용할 것.
+const getGoalCat = (id) =>
+  GOAL_CATEGORIES.find(c => c.id === id) ?? GOAL_CATEGORIES.find(c => c.id === 'other');
+
+export { drawGoalShareCard, GOAL_CATEGORIES, GOAL_PERIODS, getGoalPeriodDates, getGoalProgress, SORT_OPTS, sortEvs, getGoalCat };

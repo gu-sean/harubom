@@ -6,11 +6,11 @@
  * SearchModal: 전체 일정/D-Day 등을 검색해 해당 날짜로 이동.
  */
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { REPEAT, CATEGORIES, COLORS } from '../../constants.js';
+import { REPEAT, CATEGORIES, COLORS, MOOD_EMOJIS } from '../../constants.js';
 import { useT, useDateI18n } from '../../i18n.jsx';
 import { todayStr, uid, requestNotificationPermission, toast, vib } from '../../utils.js';
 import { useApp } from '../../store.js';
-import { GOAL_CATEGORIES, getGoalProgress } from '../../helpers.js';
+import { getGoalProgress, getGoalCat } from '../../helpers.js';
 
 // EventModal — 일정 생성/수정 폼. mode가 'edit'이면 수정. 저장 시 onSave(ev, mode, 원래시작일) 호출.
 const EventModal = ({ event, mode, onClose, onSave, onDelete }) => {
@@ -223,7 +223,6 @@ const MoodModal = ({ sel, moods, initEmoji, onClose, onSave }) => {
   const t = useT();
   const [moodSel, setMoodSel] = useState(initEmoji||moods[sel]?.emoji||'');
   const [note, setNote] = useState(moods[sel]?.note||'');
-  const EMOJIS = ['😊','😄','🥰','😌','🤗','😐','😔','😢','😡','🤩','🥱','🤒','😤','🥰','😇'];
 
   const handleSave = () => {
     if (!moodSel) { toast(t('mood.emoji_req'),'⚠️'); return; }
@@ -249,7 +248,7 @@ const MoodModal = ({ sel, moods, initEmoji, onClose, onSave }) => {
             justifyContent:'center',
             marginBottom:16,
           }},
-          EMOJIS.map(e => React.createElement('span', {
+          MOOD_EMOJIS.map(e => React.createElement('span', {
             key:e, className:`mood-btn${moodSel===e?' sel':''}`,
             style:{
               fontSize:32, cursor:'pointer', padding:'8px',
@@ -345,7 +344,7 @@ const SearchModal = ({ onClose, onGo }) => {
           const { current, target } = getGoalProgress(r.g, state);
           const pct = target ? Math.min(Math.round(current/target*100), 100) : 0;
           const isDone = current >= target;
-          const cat = GOAL_CATEGORIES.find(c => c.id === (r.g.category||'other')) || GOAL_CATEGORIES[7];
+          const cat = getGoalCat(r.g.category);
           return React.createElement('div', {key:i, className:'search-item', onClick:()=>{onGo('goal');onClose();}},
             React.createElement('div', {className:'search-item-title'},
               React.createElement('span', {style:{marginRight:6}}, r.g.emoji||cat.emoji),

@@ -8,7 +8,7 @@
  * 반복/멀티데이 전개는 store의 getEventsForDate에 위임한다.
  */
 import React, { useState, useRef } from 'react';
-import { LS, getHoliday, CATEGORIES } from '../../constants.js';
+import { LS, getHoliday, CATEGORIES, MOOD_EMOJIS } from '../../constants.js';
 import { useT, useDateI18n } from '../../i18n.jsx';
 import { todayStr, fmtD, firstDayOfMonth, daysInMonth, toast, vib, burstAt } from '../../utils.js';
 import { getEventsForDate, useApp } from '../../store.js';
@@ -22,7 +22,6 @@ import { PhotoCalendarView } from '../gallery/index.jsx';
 const MoodSection = ({ sel, moods, onOpen }) => {
   const t = useT();
   const mood = moods[sel];
-  const EMOJIS = ['😊','😄','🥰','😌','🤗','😐','😔','😢','😡','🤩','🥱','🤒','😤','😍','😇'];
   if (mood) {
     return React.createElement('div', {className:'mood-wrap mb11'},
       React.createElement('div', {style:{display:'flex',alignItems:'center',justifyContent:'space-between'}},
@@ -36,7 +35,7 @@ const MoodSection = ({ sel, moods, onOpen }) => {
   return React.createElement('div', {className:'mood-wrap mb11'},
     React.createElement('div', {className:'mood-title'}, t('cal.mood_prompt')),
     React.createElement('div', {className:'mood-btns'},
-      EMOJIS.map(e => React.createElement('span', {key:e, className:'mood-btn', onClick:()=>onOpen(e), style:{fontSize:26,cursor:'pointer'}}, e))
+      MOOD_EMOJIS.map(e => React.createElement('span', {key:e, className:'mood-btn', onClick:()=>onOpen(e), style:{fontSize:26,cursor:'pointer'}}, e))
     ),
   );
 };

@@ -12,7 +12,7 @@ import { useT, useDateI18n } from '../../i18n.jsx';
 import { todayStr, fmtD, firstDayOfMonth, daysInMonth } from '../../utils.js';
 import { getEventsForDate, useApp } from '../../store.js';
 import { EmptyState, CollapsibleSection } from '../common/index.jsx';
-import { GOAL_CATEGORIES, getGoalProgress } from '../../helpers.js';
+import { getGoalProgress, getGoalCat } from '../../helpers.js';
 
 // TrendChart — 최근 8주(이번 주 포함)의 일정/습관 완료율을 직접 그린 SVG 라인 차트.
 const TrendChart = ({ state }) => {
@@ -202,7 +202,7 @@ const WeeklyReport = ({ state }) => {
     const { current, target } = getGoalProgress(g, state);
     const pct = target ? Math.min(Math.round(current / target * 100), 100) : 0;
     const isDone = current >= target;
-    const cat = GOAL_CATEGORIES.find(c => c.id === (g.category||'other')) || GOAL_CATEGORIES[7];
+    const cat = getGoalCat(g.category);
     return { g, current, target, pct, isDone, cat };
   });
   const goalDone = goalStats.filter(gs => gs.isDone).length;
@@ -556,7 +556,7 @@ const StatsTab = () => {
             if (!h) return null;
             const { current, target } = getGoalProgress(g, state);
             const pct = target ? Math.min(100, Math.round(current/target*100)) : 0;
-            const cat = GOAL_CATEGORIES.find(c => c.id === (g.category||'other')) || GOAL_CATEGORIES[7];
+            const cat = getGoalCat(g.category);
             return { g, label: h.emoji+' '+h.name, pct, catColor: cat.color, type: 'habit' };
           }
           if (g.type === 'event' && g.eventCategory) {
@@ -564,7 +564,7 @@ const StatsTab = () => {
             const label = evCat ? evCat.emoji+' '+t('cat.'+evCat.id) : g.eventCategory;
             const { current, target } = getGoalProgress(g, state);
             const pct = target ? Math.min(100, Math.round(current/target*100)) : 0;
-            const cat = GOAL_CATEGORIES.find(c => c.id === (g.category||'other')) || GOAL_CATEGORIES[7];
+            const cat = getGoalCat(g.category);
             return { g, label, pct, catColor: cat.color, type: 'event' };
           }
           return null;

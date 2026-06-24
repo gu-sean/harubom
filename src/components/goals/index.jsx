@@ -12,12 +12,12 @@ import { useT, useDateI18n } from '../../i18n.jsx';
 import { todayStr, uid, toast, vib, burstAt } from '../../utils.js';
 import { useApp } from '../../store.js';
 import { EmptyState } from '../common/index.jsx';
-import { drawGoalShareCard, GOAL_CATEGORIES, GOAL_PERIODS, getGoalPeriodDates, getGoalProgress } from '../../helpers.js';
+import { drawGoalShareCard, GOAL_CATEGORIES, GOAL_PERIODS, getGoalPeriodDates, getGoalProgress, getGoalCat } from '../../helpers.js';
 
 // GoalCelebrationModal — 목표 달성 축하 모달. 마운트 시 진동+파티클, 공유 버튼 제공.
 const GoalCelebrationModal = ({ goal, onClose, onNewGoal }) => {
   const t = useT();
-  const cat = GOAL_CATEGORIES.find(c => c.id === (goal?.category||'other')) || GOAL_CATEGORIES[7]; // 못 찾으면 '기타'
+  const cat = getGoalCat(goal?.category);
 
   // 마운트되면 햅틱 + 색종이 파티클을 180ms 간격으로 6번 터뜨려 축하 연출
   useEffect(() => {
@@ -249,7 +249,7 @@ const GoalTab = ({ onOpen }) => {
       : filtered.length === 0
         ? React.createElement('div', { style: { textAlign: 'center', padding: '40px 0', color: 'var(--mut)', fontSize: 14 } }, t('goal.no_filter'))
         : filtered.map(goal => {
-            const cat = GOAL_CATEGORIES.find(c => c.id === (goal.category||'other')) || GOAL_CATEGORIES[7];
+            const cat = getGoalCat(goal.category);
             const { current, target } = getGoalProgress(goal, state);
             const pct = target ? Math.min(Math.round(current/target*100), 100) : 0;
             const isDone = current >= target;

@@ -240,6 +240,13 @@ const AppUpgraded = () => {
     toast(T('toast.today_nav'), '📅');
   };
 
+  const handleDeleteEvent = (id) => {
+    dispatch({ type: 'DELETE_EVENT', id });
+    setModal(null);
+    setTimeout(() => toast(T('toast.deleted'), '🗑️'), 0);
+    navigator.serviceWorker?.ready.then(reg => reg.active?.postMessage({ type: 'CANCEL_NOTIF', ev: { id } }));
+  };
+
   // '오늘로' 버튼은 캘린더 탭에서 오늘이 아닌 날짜/월을 보고 있을 때만 노출
   const showToday = state.tab === 'calendar' && (
     state.sel !== todayStr() || state.yr !== new Date().getFullYear() || state.mo !== new Date().getMonth()
@@ -296,7 +303,7 @@ const AppUpgraded = () => {
         state.tab === 'admin-users' && React.createElement(AdminUserTab),
       ),
       React.createElement(BottomNav, { tab: state.tab, onChange: changeTab, user }),
-      modal?.type === 'event' && React.createElement(EventModal, { event: modal.ev, mode: modal.mode, onClose: () => setModal(null), onSave: handleSaveEvent, onDelete: (id) => { dispatch({ type: 'DELETE_EVENT', id }); setModal(null); setTimeout(() => toast(T('toast.deleted'), '🗑️'), 0); navigator.serviceWorker?.ready.then(reg => reg.active?.postMessage({ type: 'CANCEL_NOTIF', ev: { id } })); } }),
+      modal?.type === 'event' && React.createElement(EventModal, { event: modal.ev, mode: modal.mode, onClose: () => setModal(null), onSave: handleSaveEvent, onDelete: handleDeleteEvent }),
       modal?.type === 'dday' && React.createElement(DDayModal, { dd: modal.dd, onClose: () => setModal(null), onSave: handleSaveDDay }),
       modal?.type === 'habit' && React.createElement(HabitModal, { habit: modal.h, onClose: () => setModal(null), onSave: handleSaveHabit }),
       modal?.type === 'mood' && React.createElement(MoodModal, { sel: state.sel, moods: state.moods, initEmoji: modal.initEmoji, onClose: () => setModal(null), onSave: handleSaveMood }),
