@@ -125,8 +125,9 @@ export const INIT_STATE = () => {
 };
 
 // saveToLS — 영속화가 필요한 슬라이스만 골라 LS.DATA에 직렬화 저장.
-// (tab/yr/mo/sel 같은 휘발성 UI 상태는 저장하지 않음)
-export const saveToLS = (state) => {
+// updateTimestamp=false 일 때는 UPDATED_AT을 갱신하지 않는다(CLOUD_RESTORE 후 클라우드 타임스탬프를 직접 쓰기 위함).
+export const saveToLS = (state, updateTimestamp = true) => {
+  if (updateTimestamp) localStorage.setItem(LS.UPDATED_AT, new Date().toISOString());
   try {
     localStorage.setItem(LS.DATA, JSON.stringify({
       calView: state.calView, events: state.events, ddays: state.ddays,
@@ -356,7 +357,8 @@ export const reducer = (state, action) => {
     default: next = state;
   }
   // 탭 전환은 휘발성 UI 상태라 저장하지 않음. 그 외 모든 변경은 즉시 영속화.
-  if (action.type !== 'SET_TAB') saveToLS(next);
+  // CLOUD_RESTORE는 클라우드 타임스탬프를 syncFromCloud에서 직접 기록하므로 UPDATED_AT 갱신 생략.
+  if (action.type !== 'SET_TAB') saveToLS(next, action.type !== 'CLOUD_RESTORE');
   return next;
 };
 

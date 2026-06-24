@@ -170,35 +170,49 @@ const AppUpgraded = () => {
   }, []);
 
   // syncToCloud — 현재 상태를 Firestore users/{uid} 문서에 백업(merge). 갤러리는 메타만.
+  // user state가 stale일 수 있으므로 window._currentUser를 fallback으로 사용.
   const syncToCloud = async (silent = false) => {
-    if (!user || !window._FB?.enabled) return;
+    const currentUser = user || window._currentUser;
+    if (!currentUser || !window._FB?.enabled) return;
     const { fs, doc, setDoc } = window._FB;
     try {
-      await setDoc(doc(fs, 'users', user.uid), {
+      await setDoc(doc(fs, 'users', currentUser.uid), {
         updatedAt: new Date().toISOString(),
-        email: user.email || '',
-        displayName: user.displayName || '',
+        email: currentUser.email || '',
+        displayName: currentUser.displayName || '',
         lang: state.lang,
         events: state.events, ddays: state.ddays, habits: state.habits,
         // notifHour는 settings에서 직접 Firestore에 저장되지만, 클라우드 복원 시 유지되도록 포함
         habitLogs: state.habitLogs, moods: state.moods, goals: state.goals || [],
-        reviews: state.reviews || {},
+        reviews: state.reviews || {}, photoCalendars: state.photoCalendars || [],
         gallery: state.gallery.map(p => ({ id: p.id, thumb: p.thumb, storageKey: p.storageKey, filter: p.filter, br: p.br, co: p.co, sa: p.sa, rot: p.rot, stk: p.stk, uploaded: p.uploaded, edited: p.edited })),
       }, { merge: true });
       if (!silent) toast('클라우드에 백업됐어요', '☁️');
     } catch (e) { if (!silent) toast('백업 실패: ' + e.message, '⚠️'); }
   };
 
-  // syncFromCloud — 클라우드 문서를 읽어 상태로 복원. 문서가 없으면(첫 로그인) 현재 상태를 올려 초기화.
+  // syncFromCloud — 클라우드 문서를 읽어 상태로 복원.
+  // 충돌 해결: cloudTs > localTs → 클라우드 복원, 그 외 → 로컬을 클라우드에 업로드.
+  // user state는 setUser 직후 아직 반영 전일 수 있으므로 window._currentUser를 fallback으로 사용.
   const syncFromCloud = async (silent = false) => {
-    if (!user || !window._FB?.enabled) return;
+    const currentUser = user || window._currentUser;
+    if (!currentUser || !window._FB?.enabled) return;
     const { fs, doc, getDoc } = window._FB;
     try {
-      const snap = await getDoc(doc(fs, 'users', user.uid));
+      const snap = await getDoc(doc(fs, 'users', currentUser.uid));
       if (!snap.exists()) { await syncToCloud(true); return; }
       const d = snap.data();
-      dispatch({ type: 'CLOUD_RESTORE', data: { events: d.events || {}, ddays: d.ddays || [], habits: d.habits || [], habitLogs: d.habitLogs || {}, moods: d.moods || {}, gallery: d.gallery || [], goals: d.goals || [], photoCalendars: d.photoCalendars || [], reviews: d.reviews || {} } });
-      if (!silent) toast(T('toast.restored'), '📥');
+      const cloudTs = d.updatedAt || '';
+      const localTs = localStorage.getItem(LS.UPDATED_AT) || '';
+      if (cloudTs > localTs) {
+        // 클라우드가 더 최신 → 복원 후 로컬 타임스탬프를 클라우드 기준으로 맞춤
+        dispatch({ type: 'CLOUD_RESTORE', data: { events: d.events || {}, ddays: d.ddays || [], habits: d.habits || [], habitLogs: d.habitLogs || {}, moods: d.moods || {}, gallery: d.gallery || [], goals: d.goals || [], photoCalendars: d.photoCalendars || [], reviews: d.reviews || {} } });
+        localStorage.setItem(LS.UPDATED_AT, cloudTs);
+        if (!silent) toast(T('toast.restored'), '📥');
+      } else {
+        // 로컬이 더 최신이거나 동일 → 로컬을 클라우드에 업로드
+        await syncToCloud(silent);
+      }
     } catch (e) { if (!silent) toast('복원 실패: ' + e.message, '⚠️'); }
   };
 
