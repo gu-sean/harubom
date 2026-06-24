@@ -150,7 +150,7 @@ const SettingsModal = ({ onClose }) => {
             notifLoading ? '⏳ 처리 중...' : notifEnabled ? '🔔 ' + t('settings.notif.off') : '🔕 ' + t('settings.notif.on'),
           ),
           notifEnabled && React.createElement(React.Fragment, null,
-            React.createElement('div', { style: { fontSize: 12, color: 'var(--mut)', margin: '14px 0 8px', fontWeight: 700 } }, '알림 시각 (KST)'),
+            React.createElement('div', { style: { fontSize: 12, color: 'var(--mut)', margin: '14px 0 8px', fontWeight: 700 } }, t('settings.notif.hour')),
             React.createElement('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 8 } },
               NOTIF_HOURS.map(h => React.createElement('button', {
                 key: h,
