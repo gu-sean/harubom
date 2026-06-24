@@ -41,6 +41,7 @@ const SettingsModal = ({ onClose }) => {
   };
 
   const NOTIF_HOURS = [6, 7, 8, 9, 10, 11, 12, 18, 20, 22];
+  const supportsNotif = typeof Notification !== 'undefined';
 
   // toggleNotif — 푸시 알림 켜기/끄기. 켤 때 권한 요청 → FCM 토큰 발급 → 서버 저장, 끌 때 토큰 제거.
   const toggleNotif = async () => {
@@ -130,7 +131,7 @@ const SettingsModal = ({ onClose }) => {
             ))
           ),
         ),
-        'Notification' in window && React.createElement('div', { className: 'settings-section' },
+        supportsNotif && React.createElement('div', { className: 'settings-section' },
           React.createElement('div', { className: 'settings-section-title' }, t('settings.notif')),
           React.createElement('div', { style: { fontSize: 12, color: 'var(--mut)', marginBottom: 12 } }, t('settings.notif.desc')),
           React.createElement('button', {
@@ -161,7 +162,7 @@ const SettingsModal = ({ onClose }) => {
                   color: notifHour === h ? '#fff' : 'var(--txt)',
                   transition: 'all .15s',
                 },
-              }, String(h).padStart(2, '0') + ':00'),
+              }, String(h).padStart(2, '0') + ':00')),
             ),
           ),
         ),

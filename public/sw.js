@@ -91,9 +91,23 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // JS/JSX — 항상 네트워크에서 직접 받음 (캐시 금지)
-  if (url.match(/\.(js|jsx)(\?|$)/)) {
-    e.respondWith(fetch(e.request));
+  // JS/CSS — Cache First (Vite 해시 파일명 덕분에 캐시 히트 = 항상 정확한 버전)
+  // 오프라인 시 캐시에서 서빙. 첫 방문 시 자동 캐시.
+  if (url.match(/\.(js|jsx|css)(\?|$)/)) {
+    e.respondWith(
+      caches.match(e.request).then(cached => {
+        if (cached) return cached;
+        return fetch(e.request.clone())
+          .then(res => {
+            if (res && res.ok) {
+              const cloned = res.clone();
+              caches.open(CACHE_NAME).then(c => c.put(e.request, cloned));
+            }
+            return res;
+          })
+          .catch(() => new Response('', { status: 503 }));
+      })
+    );
     return;
   }
 
