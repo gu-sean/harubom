@@ -120,7 +120,7 @@ const EventModal = ({ event, mode, onClose, onSave, onDelete }) => {
         React.createElement('div', {className:'fi-row'},
           React.createElement('label', {className:'fi-label'}, t('event.repeat')),
           React.createElement('select', {className:'fi',value:repeat,onChange:e=>setRepeat(e.target.value)},
-            Object.entries(REPEAT).map(([v]) => React.createElement('option', {key:v,value:v}, t('repeat.' + v)))
+            REPEAT.map(v => React.createElement('option', {key:v,value:v}, t('repeat.' + v)))
           ),
         ),
         repeat !== 'none' && React.createElement('div', {className:'fi-row'},
