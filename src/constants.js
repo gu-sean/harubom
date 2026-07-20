@@ -19,7 +19,7 @@ export const SCHEMA_VERSION = 1;
 
 // 관리자 계정 UID. 노출돼도 안전하며(실제 권한은 Firestore 보안 규칙이 강제),
 // 이메일 접두사 매칭과 달리 우회가 불가능하다. firestore.rules의 isAdmin()과 반드시 일치시킬 것.
-export const ADMIN_UID = '7DTz6dDKDnTaFwhj5DYyzYW4tkU2';
+export const ADMIN_UID = 'cqqUDn8PXzNjv4HL0f8X2EOK32Q2';
 
 // ══════════════════════════════════════
 // 한국 공휴일 데이터
